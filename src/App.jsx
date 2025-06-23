@@ -18,7 +18,7 @@ const SimpleKeyboard = ({ onKeyPress, layout = "default", disabled = false }) =>
               key={key}
               className={`
                 ${key === 'ENTER' || key === 'BACKSPACE' ? 'px-3' : 'w-8 h-12'} 
-                bg-gray-200 hover:bg-gray-300 rounded text-sm font-semibold
+                bg-green-200 hover:bg-green-300 rounded text-sm font-semibold text-green-800
                 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
               onClick={() => !disabled && onKeyPress(key)}
@@ -162,9 +162,9 @@ const WordleGame = () => {
   return (
     <div className="max-w-lg mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Wordle</h1>
-        <button onClick={reset} className="p-2 hover:bg-gray-100 rounded">
-          <RotateCcw size={20} />
+        <h1 className="text-2xl font-bold text-green-800">Wordle</h1>
+        <button onClick={reset} className="p-2 hover:bg-green-200 rounded">
+          <RotateCcw size={20} className="text-green-700" />
         </button>
       </div>
       
@@ -193,7 +193,7 @@ const WordleGame = () => {
                     ${status === 'correct' ? 'bg-green-500 text-white border-green-500' :
                       status === 'present' ? 'bg-yellow-500 text-white border-yellow-500' :
                       status === 'absent' ? 'bg-gray-500 text-white border-gray-500' :
-                      letter ? 'border-gray-400' : 'border-gray-300'}
+                      letter ? 'border-green-400 bg-green-50' : 'border-green-300 bg-green-50'}
                   `}
                 >
                   {letter.toUpperCase()}
@@ -205,8 +205,8 @@ const WordleGame = () => {
       </div>
 
       {gameOver && (
-        <div className="text-center mb-4">
-          <p className="text-lg font-semibold">
+        <div className="text-center mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
+          <p className="text-lg font-semibold text-green-800">
             {won ? 'Congratulations!' : `Game Over! The word was ${SOLUTION}`}
           </p>
         </div>
@@ -376,14 +376,14 @@ const ConnectionsGame = () => {
   return (
     <div className="max-w-lg mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Connections</h1>
-        <button onClick={reset} className="p-2 hover:bg-gray-100 rounded">
-          <RotateCcw size={20} />
+        <h1 className="text-2xl font-bold text-green-800">Connections</h1>
+        <button onClick={reset} className="p-2 hover:bg-green-200 rounded">
+          <RotateCcw size={20} className="text-green-700" />
         </button>
       </div>
 
       <div className="mb-4">
-        <p>Mistakes remaining: {4 - mistakes}</p>
+        <p className="text-green-700">Mistakes remaining: {4 - mistakes}</p>
       </div>
 
       <div className="space-y-2 mb-6">
@@ -401,10 +401,10 @@ const ConnectionsGame = () => {
             key={index}
             onClick={() => toggleWord(word)}
             className={`
-              p-3 rounded text-sm font-semibold border-2 h-16
+              p-3 rounded text-sm font-semibold border-2 h-16 text-green-800
               ${selected.includes(word) 
-                ? 'bg-gray-300 border-gray-400' 
-                : 'bg-gray-100 border-gray-200 hover:bg-gray-200'}
+                ? 'bg-green-300 border-green-400' 
+                : 'bg-green-50 border-green-200 hover:bg-green-200'}
             `}
           >
             {word}
@@ -415,7 +415,7 @@ const ConnectionsGame = () => {
       <div className="flex gap-2 justify-center">
         <button
           onClick={shuffle}
-          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded flex items-center gap-2"
+          className="px-4 py-2 bg-green-200 hover:bg-green-300 rounded flex items-center gap-2 text-green-800"
         >
           <Shuffle size={16} />
           Shuffle
@@ -423,15 +423,15 @@ const ConnectionsGame = () => {
         <button
           onClick={submitGuess}
           disabled={selected.length !== 4}
-          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded disabled:opacity-50"
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-green-100 rounded disabled:opacity-50"
         >
           Submit
         </button>
       </div>
 
       {gameOver && (
-        <div className="text-center mt-4">
-          <p className="text-lg font-semibold">
+        <div className="text-center mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+          <p className="text-lg font-semibold text-green-800">
             {solvedGroups.length === 4 ? 'Congratulations!' : 'Game Over!'}
           </p>
         </div>
@@ -594,16 +594,16 @@ const StrandsGame = () => {
   return (
     <div className="max-w-lg mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Strands</h1>
-        <button onClick={reset} className="p-2 hover:bg-gray-100 rounded">
-          <RotateCcw size={20} />
+        <h1 className="text-2xl font-bold text-green-800">Strands</h1>
+        <button onClick={reset} className="p-2 hover:bg-green-200 rounded">
+          <RotateCcw size={20} className="text-green-700" />
         </button>
       </div>
 
-      <div className="mb-4">
-        <p className="text-sm">Find words related to: <strong>React Development</strong></p>
-        <p className="text-sm">Current word: <strong>{currentWord}</strong></p>
-        <p className="text-sm">Found: {foundWords.length}/{WORDS_TO_FIND.length}</p>
+      <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+        <p className="text-sm text-green-700">Find words related to: <strong>React Development</strong></p>
+        <p className="text-sm text-green-700">Current word: <strong>{currentWord}</strong></p>
+        <p className="text-sm text-green-700">Found: {foundWords.length}/{WORDS_TO_FIND.length}</p>
       </div>
 
       <div className="grid grid-cols-5 gap-1 mb-6 max-w-xs mx-auto">
@@ -623,7 +623,7 @@ const StrandsGame = () => {
                     ? 'bg-blue-500 text-white border-blue-600' 
                     : isPartOfFoundWord
                     ? 'bg-yellow-200 border-yellow-400'
-                    : 'bg-gray-100 border-gray-300 hover:bg-gray-200'}
+                    : 'bg-green-50 border-green-300 hover:bg-green-200 text-green-800'}
                 `}
               >
                 {letter}
@@ -634,10 +634,10 @@ const StrandsGame = () => {
       </div>
 
       <div className="space-y-2 mb-4">
-        <h3 className="font-semibold">Found Words:</h3>
+        <h3 className="font-semibold text-green-800">Found Words:</h3>
         {foundWords.map((word, index) => (
           <div key={index} className={`p-2 rounded ${word === SPANGRAM ? 'bg-purple-200' : 'bg-green-200'}`}>
-            {word} {word === SPANGRAM && '(Spangram!)'}
+            <span className="text-green-800">{word} {word === SPANGRAM && '(Spangram!)'}</span>
           </div>
         ))}
       </div>
@@ -645,22 +645,22 @@ const StrandsGame = () => {
       <div className="flex gap-2 justify-center">
         <button
           onClick={resetSelection}
-          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
+          className="px-4 py-2 bg-green-200 hover:bg-green-300 rounded text-green-800"
         >
           Clear Selection
         </button>
         <button
           onClick={checkWord}
           disabled={!currentWord}
-          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded disabled:opacity-50"
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-green-100 rounded disabled:opacity-50"
         >
           Submit Word
         </button>
       </div>
 
       {foundWords.length === WORDS_TO_FIND.length && (
-        <div className="text-center mt-4">
-          <p className="text-lg font-semibold">Congratulations! All words found!</p>
+        <div className="text-center mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+          <p className="text-lg font-semibold text-green-800">Congratulations! All words found!</p>
         </div>
       )}
     </div>
@@ -817,20 +817,20 @@ const CrosswordGame = () => {
   return (
     <div className="max-w-lg mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Crossword</h1>
+        <h1 className="text-2xl font-bold text-green-800">Crossword</h1>
         <div className="flex items-center gap-4">
-          <div className="text-lg font-mono">
+          <div className="text-lg font-mono text-green-700 bg-green-50 px-3 py-1 rounded border border-green-200">
             {formatTime(timeElapsed)}
           </div>
-          <button onClick={reset} className="p-2 hover:bg-gray-100 rounded">
-            <RotateCcw size={20} />
+          <button onClick={reset} className="p-2 hover:bg-green-200 rounded">
+            <RotateCcw size={20} className="text-green-700" />
           </button>
         </div>
       </div>
 
       {isCompleted && (
-        <div className="text-center mb-4">
-          <p className="text-lg font-semibold text-green-600">
+        <div className="text-center mb-4 p-4 bg-gradient-to-r from-green-200 to-yellow-200 rounded-lg border border-green-300">
+          <p className="text-lg font-semibold text-green-800">
             🎉 Congratulations! Puzzle solved in {formatTime(timeElapsed)}!
           </p>
         </div>
@@ -845,7 +845,7 @@ const CrosswordGame = () => {
             return (
               <div key={cellId} className="relative">
                 {isBlack ? (
-                  <div className="w-12 h-12 bg-black"></div>
+                  <div className="w-12 h-12 bg-green-800"></div>
                 ) : (
                   <input
                     type="text"
@@ -858,9 +858,9 @@ const CrosswordGame = () => {
                       saveGameState(grid, cellId, timeElapsed, isCompleted);
                     }}
                     className={`
-                      w-12 h-12 border-2 text-center text-lg font-bold
-                      ${selectedCell === cellId ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}
-                      ${isCompleted ? 'bg-green-50' : ''}
+                      w-12 h-12 border-2 text-center text-lg font-bold text-green-800
+                      ${selectedCell === cellId ? 'border-blue-500 bg-blue-50' : 'border-green-300'}
+                      ${isCompleted ? 'bg-green-100' : 'bg-green-50'}
                     `}
                     disabled={isCompleted}
                   />
@@ -868,7 +868,7 @@ const CrosswordGame = () => {
                 {/* Add number labels for clues */}
                 {((rowIndex === 0 && colIndex === 0) || 
                   (rowIndex === 4 && colIndex === 1)) && (
-                  <span className="absolute top-0 left-0 text-xs bg-white px-1">
+                  <span className="absolute top-0 left-0 text-xs bg-green-100 px-1 text-green-800">
                     {rowIndex === 0 && colIndex === 0 ? '1' : '5'}
                   </span>
                 )}
@@ -878,17 +878,17 @@ const CrosswordGame = () => {
         )}
       </div>
 
-      <div className="space-y-4 mb-6">
+      <div className="space-y-4 mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
         <div>
-          <h3 className="font-semibold mb-2">Across</h3>
+          <h3 className="font-semibold mb-2 text-green-800">Across</h3>
           {Object.entries(CLUES.across).map(([num, clue]) => (
-            <p key={num} className="text-sm">{num}. {clue}</p>
+            <p key={num} className="text-sm text-green-700">{num}. {clue}</p>
           ))}
         </div>
         <div>
-          <h3 className="font-semibold mb-2">Down</h3>
+          <h3 className="font-semibold mb-2 text-green-800">Down</h3>
           {Object.entries(CLUES.down).map(([num, clue]) => (
-            <p key={num} className="text-sm">{num}. {clue}</p>
+            <p key={num} className="text-sm text-green-700">{num}. {clue}</p>
           ))}
         </div>
       </div>
@@ -919,11 +919,47 @@ const App = () => {
 
   const completedGames = getCompletedGames();
 
+  // Reset all puzzles function
+  const resetAllPuzzles = () => {
+    const confirmReset = window.confirm(
+      "Are you sure you want to reset all puzzles? This will clear all progress and cannot be undone."
+    );
+    
+    if (confirmReset) {
+      try {
+        // Clear all game states
+        localStorage.removeItem('wordle-game-state');
+        localStorage.removeItem('connections-game-state');
+        localStorage.removeItem('strands-game-state');
+        localStorage.removeItem('crossword-game-state');
+        localStorage.removeItem('completed-games');
+        
+        // Force a page refresh to reset all component states
+        window.location.reload();
+      } catch (error) {
+        console.error('Error resetting puzzles:', error);
+      }
+    }
+  };
+
+
   const renderGame = () => {
     if (currentGame === 'menu') {
+      const allGamesCompleted = games.every(game => completedGames.includes(game.id));
+      
       return (
         <div className="max-w-lg mx-auto p-4">
-          <h1 className="text-3xl font-bold text-center mb-8">NYT Games</h1>
+          <h1 className="text-3xl font-bold text-center mb-8 text-green-800">NYT Games</h1>
+          
+          {allGamesCompleted && (
+            <div className="mb-8 p-6 bg-gradient-to-r from-yellow-200 to-green-200 rounded-lg border-2 border-yellow-400 text-center">
+              <div className="text-4xl mb-2">🎉🏆🎉</div>
+              <h2 className="text-2xl font-bold text-green-800 mb-2">Puzzle Master!</h2>
+              <p className="text-green-700">Congratulations! You've completed all the puzzles!</p>
+              <p className="text-green-600 text-sm mt-1">You're a true word game champion! 🌟</p>
+            </div>
+          )}
+          
           <div className="grid grid-cols-2 gap-4">
             {games.map((game) => {
               const isCompleted = completedGames.includes(game.id);
@@ -934,8 +970,8 @@ const App = () => {
                   className={`
                     p-6 rounded-lg text-lg font-semibold transition-colors
                     ${isCompleted 
-                      ? 'bg-green-500 hover:bg-green-600 text-white' 
-                      : 'bg-blue-500 hover:bg-blue-600 text-white'}
+                      ? 'bg-rose-300 hover:bg-rose-400 text-green-100' 
+                      : 'bg-blue-500 hover:bg-blue-600 text-green-100'}
                   `}
                 >
                   {game.name}
@@ -955,12 +991,12 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-green-100">
       {currentGame !== 'menu' && (
         <div className="p-4">
           <button
             onClick={() => setCurrentGame('menu')}
-            className="flex items-center gap-2 text-blue-500 hover:text-blue-700"
+            className="flex items-center gap-2 text-green-700 hover:text-green-900"
           >
             <ChevronLeft size={20} />
             Back to Games
