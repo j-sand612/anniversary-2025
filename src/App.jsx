@@ -548,15 +548,22 @@ const StrandsGame = () => {
       setFoundWords(newFoundWords);
       setFoundWordCells(newFoundWordCells);
       saveGameState([], newFoundWords, newFoundWordCells, '', false);
+    } else {
+      // Save the current invalid guess state before resetting
+      saveGameState(selectedCells, foundWords, foundWordCells, currentWord, isSelecting);
     }
     resetSelection();
   };
 
   const resetSelection = () => {
-    setSelectedCells([]);
-    setCurrentWord('');
-    setIsSelecting(false);
-    saveGameState([], foundWords, foundWordCells, '', false);
+    const newSelectedCells = [];
+    const newCurrentWord = '';
+    const newIsSelecting = false;
+    
+    setSelectedCells(newSelectedCells);
+    setCurrentWord(newCurrentWord);
+    setIsSelecting(newIsSelecting);
+    saveGameState(newSelectedCells, foundWords, foundWordCells, newCurrentWord, newIsSelecting);
   };
 
   const reset = () => {
@@ -699,19 +706,73 @@ const CrosswordGame = () => {
     }
     return {
       grid: Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('')),
-      selectedCell: null
+      selectedCell: null,
+      timeElapsed: 0, // in seconds
+      isCompleted: false
     };
   };
 
   const initialState = loadGameState();
   const [grid, setGrid] = useState(initialState.grid);
   const [selectedCell, setSelectedCell] = useState(initialState.selectedCell);
+  const [timeElapsed, setTimeElapsed] = useState(initialState.timeElapsed);
+  const [isCompleted, setIsCompleted] = useState(initialState.isCompleted);
+
+  // Timer effect - only runs when component is mounted (i.e., when in crossword game)
+  useEffect(() => {
+    if (isCompleted) return; // Don't run timer if already completed
+
+    const timer = setInterval(() => {
+      setTimeElapsed(prev => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isCompleted]);
+
+  // Save timeElapsed to localStorage whenever it changes
+  useEffect(() => {
+    saveGameState(grid, selectedCell, timeElapsed, isCompleted);
+  }, [timeElapsed]);
+
+  // Auto-check solution whenever grid changes
+  useEffect(() => {
+    if (isCompleted) return;
+
+    // Check if all non-black squares are filled
+    const isGridComplete = grid.every((row, rowIndex) =>
+      row.every((cell, colIndex) =>
+        SOLUTION[rowIndex][colIndex] === '' || cell !== ''
+      )
+    );
+
+    if (isGridComplete) {
+      // Check if solution is correct
+      const isCorrect = grid.every((row, rowIndex) =>
+        row.every((cell, colIndex) =>
+          SOLUTION[rowIndex][colIndex] === '' || cell === SOLUTION[rowIndex][colIndex]
+        )
+      );
+
+      if (isCorrect) {
+        setIsCompleted(true);
+        // Mark as completed
+        const completedGames = JSON.parse(localStorage.getItem('completed-games') || '[]');
+        if (!completedGames.includes('crossword')) {
+          completedGames.push('crossword');
+          localStorage.setItem('completed-games', JSON.stringify(completedGames));
+        }
+        saveGameState(grid, selectedCell, timeElapsed, true);
+      }
+    }
+  }, [grid, timeElapsed, isCompleted]);
 
   // Save game state
-  const saveGameState = (newGrid, newSelectedCell) => {
+  const saveGameState = (newGrid, newSelectedCell, newTimeElapsed, newIsCompleted) => {
     const state = {
       grid: newGrid,
-      selectedCell: newSelectedCell
+      selectedCell: newSelectedCell,
+      timeElapsed: newTimeElapsed,
+      isCompleted: newIsCompleted
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -721,18 +782,20 @@ const CrosswordGame = () => {
   };
 
   const handleCellChange = (row, col, value) => {
-    if (SOLUTION[row][col] === '') return; // Don't allow input in black squares
+    if (SOLUTION[row][col] === '' || isCompleted) return; // Don't allow input in black squares or if completed
     
     const newGrid = [...grid];
     newGrid[row][col] = value.toUpperCase();
     setGrid(newGrid);
-    saveGameState(newGrid, selectedCell);
+    saveGameState(newGrid, selectedCell, timeElapsed, isCompleted);
   };
 
   const reset = () => {
     const newGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(''));
     setGrid(newGrid);
     setSelectedCell(null);
+    setTimeElapsed(0);
+    setIsCompleted(false);
     
     try {
       localStorage.removeItem(STORAGE_KEY);
@@ -744,34 +807,34 @@ const CrosswordGame = () => {
     }
   };
 
-  const checkSolution = () => {
-    const isCorrect = grid.every((row, rowIndex) =>
-      row.every((cell, colIndex) =>
-        SOLUTION[rowIndex][colIndex] === '' || cell === SOLUTION[rowIndex][colIndex]
-      )
-    );
-    
-    if (isCorrect) {
-      alert('Congratulations! Puzzle solved!');
-      // Mark as completed
-      const completedGames = JSON.parse(localStorage.getItem('completed-games') || '[]');
-      if (!completedGames.includes('crossword')) {
-        completedGames.push('crossword');
-        localStorage.setItem('completed-games', JSON.stringify(completedGames));
-      }
-    } else {
-      alert('Not quite right. Keep trying!');
-    }
+  // Format time display
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
     <div className="max-w-lg mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Crossword</h1>
-        <button onClick={reset} className="p-2 hover:bg-gray-100 rounded">
-          <RotateCcw size={20} />
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="text-lg font-mono">
+            {formatTime(timeElapsed)}
+          </div>
+          <button onClick={reset} className="p-2 hover:bg-gray-100 rounded">
+            <RotateCcw size={20} />
+          </button>
+        </div>
       </div>
+
+      {isCompleted && (
+        <div className="text-center mb-4">
+          <p className="text-lg font-semibold text-green-600">
+            🎉 Congratulations! Puzzle solved in {formatTime(timeElapsed)}!
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-5 gap-1 mb-6 max-w-xs mx-auto">
         {Array(GRID_SIZE).fill().map((_, rowIndex) =>
@@ -792,12 +855,14 @@ const CrosswordGame = () => {
                     onClick={() => {
                       const cellId = `${rowIndex}-${colIndex}`;
                       setSelectedCell(cellId);
-                      saveGameState(grid, cellId);
+                      saveGameState(grid, cellId, timeElapsed, isCompleted);
                     }}
                     className={`
                       w-12 h-12 border-2 text-center text-lg font-bold
                       ${selectedCell === cellId ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}
+                      ${isCompleted ? 'bg-green-50' : ''}
                     `}
+                    disabled={isCompleted}
                   />
                 )}
                 {/* Add number labels for clues */}
@@ -826,15 +891,6 @@ const CrosswordGame = () => {
             <p key={num} className="text-sm">{num}. {clue}</p>
           ))}
         </div>
-      </div>
-
-      <div className="flex gap-2 justify-center">
-        <button
-          onClick={checkSolution}
-          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded"
-        >
-          Check Solution
-        </button>
       </div>
     </div>
   );
