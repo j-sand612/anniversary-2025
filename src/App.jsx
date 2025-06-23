@@ -37,18 +37,66 @@ const SimpleKeyboard = ({ onKeyPress, layout = "default", disabled = false }) =>
 const WordleGame = () => {
   const SOLUTION = "AUGIE"; // You can change this
   const MAX_GUESSES = 6;
+  const STORAGE_KEY = 'wordle-game-state';
   
-  const [guesses, setGuesses] = useState(Array(MAX_GUESSES).fill(''));
-  const [currentGuess, setCurrentGuess] = useState('');
-  const [currentRow, setCurrentRow] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
-  const [won, setWon] = useState(false);
+  // Load saved state from localStorage
+  const loadGameState = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const state = JSON.parse(saved);
+        return state;
+      }
+    } catch (error) {
+      console.error('Error loading game state:', error);
+    }
+    return {
+      guesses: Array(MAX_GUESSES).fill(''),
+      currentGuess: '',
+      currentRow: 0,
+      gameOver: false,
+      won: false
+    };
+  };
+
+  const initialState = loadGameState();
+  const [guesses, setGuesses] = useState(initialState.guesses);
+  const [currentGuess, setCurrentGuess] = useState(initialState.currentGuess);
+  const [currentRow, setCurrentRow] = useState(initialState.currentRow);
+  const [gameOver, setGameOver] = useState(initialState.gameOver);
+  const [won, setWon] = useState(initialState.won);
+
+  // Save game state to localStorage
+  const saveGameState = (newGuesses, newCurrentGuess, newCurrentRow, newGameOver, newWon) => {
+    const state = {
+      guesses: newGuesses,
+      currentGuess: newCurrentGuess,
+      currentRow: newCurrentRow,
+      gameOver: newGameOver,
+      won: newWon
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      // Update completed games list
+      if (newGameOver && newWon) {
+        const completedGames = JSON.parse(localStorage.getItem('completed-games') || '[]');
+        if (!completedGames.includes('wordle')) {
+          completedGames.push('wordle');
+          localStorage.setItem('completed-games', JSON.stringify(completedGames));
+        }
+      }
+    } catch (error) {
+      console.error('Error saving game state:', error);
+    }
+  };
 
   const handleKeyPress = (key) => {
     if (gameOver) return;
 
     if (key === 'BACKSPACE') {
-      setCurrentGuess(prev => prev.slice(0, -1));
+      const newCurrentGuess = currentGuess.slice(0, -1);
+      setCurrentGuess(newCurrentGuess);
+      saveGameState(guesses, newCurrentGuess, currentRow, gameOver, won);
     } else if (key === 'ENTER') {
       if (currentGuess.length === 5) {
         const newGuesses = [...guesses];
@@ -58,15 +106,21 @@ const WordleGame = () => {
         if (currentGuess.toUpperCase() === SOLUTION) {
           setWon(true);
           setGameOver(true);
+          saveGameState(newGuesses, currentGuess, currentRow, true, true);
         } else if (currentRow === MAX_GUESSES - 1) {
           setGameOver(true);
+          saveGameState(newGuesses, '', currentRow, true, false);
         } else {
-          setCurrentRow(prev => prev + 1);
+          const newCurrentRow = currentRow + 1;
+          setCurrentRow(newCurrentRow);
+          setCurrentGuess('');
+          saveGameState(newGuesses, '', newCurrentRow, false, false);
         }
-        setCurrentGuess('');
       }
     } else if (currentGuess.length < 5 && key.match(/[A-Z]/)) {
-      setCurrentGuess(prev => prev + key);
+      const newCurrentGuess = currentGuess + key;
+      setCurrentGuess(newCurrentGuess);
+      saveGameState(guesses, newCurrentGuess, currentRow, gameOver, won);
     }
   };
 
@@ -81,11 +135,28 @@ const WordleGame = () => {
   };
 
   const reset = () => {
-    setGuesses(Array(MAX_GUESSES).fill(''));
-    setCurrentGuess('');
-    setCurrentRow(0);
-    setGameOver(false);
-    setWon(false);
+    const initialState = {
+      guesses: Array(MAX_GUESSES).fill(''),
+      currentGuess: '',
+      currentRow: 0,
+      gameOver: false,
+      won: false
+    };
+    setGuesses(initialState.guesses);
+    setCurrentGuess(initialState.currentGuess);
+    setCurrentRow(initialState.currentRow);
+    setGameOver(initialState.gameOver);
+    setWon(initialState.won);
+    
+    // Clear from localStorage
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      const completedGames = JSON.parse(localStorage.getItem('completed-games') || '[]');
+      const updatedCompleted = completedGames.filter(game => game !== 'wordle');
+      localStorage.setItem('completed-games', JSON.stringify(updatedCompleted));
+    } catch (error) {
+      console.error('Error clearing game state:', error);
+    }
   };
 
   return (
@@ -101,11 +172,17 @@ const WordleGame = () => {
         {Array(MAX_GUESSES).fill().map((_, rowIndex) => (
           <div key={rowIndex} className="grid grid-cols-5 gap-1">
             {Array(5).fill().map((_, colIndex) => {
-              const isCurrentRow = rowIndex === currentRow;
-              const letter = isCurrentRow ? 
-                (currentGuess[colIndex] || '') : 
-                (guesses[rowIndex][colIndex] || '');
-              const status = rowIndex < currentRow ? 
+              const isCurrentRow = rowIndex === currentRow && !gameOver;
+              const isCompletedRow = rowIndex < currentRow || (rowIndex === currentRow && gameOver);
+              
+              let letter = '';
+              if (isCompletedRow) {
+                letter = guesses[rowIndex][colIndex] || '';
+              } else if (isCurrentRow) {
+                letter = currentGuess[colIndex] || '';
+              }
+              
+              const status = isCompletedRow ? 
                 getLetterStatus(letter, colIndex, guesses[rowIndex]) : '';
               
               return (
@@ -151,19 +228,68 @@ const ConnectionsGame = () => {
   ];
 
   const allWords = GROUPS.flatMap(group => group.words).sort(() => Math.random() - 0.5);
-  
-  const [words, setWords] = useState(allWords);
-  const [selected, setSelected] = useState([]);
-  const [solvedGroups, setSolvedGroups] = useState([]);
-  const [mistakes, setMistakes] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
+  const STORAGE_KEY = 'connections-game-state';
+
+  // Load saved state
+  const loadGameState = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Error loading connections state:', error);
+    }
+    return {
+      words: allWords,
+      selected: [],
+      solvedGroups: [],
+      mistakes: 0,
+      gameOver: false
+    };
+  };
+
+  const initialState = loadGameState();
+  const [words, setWords] = useState(initialState.words);
+  const [selected, setSelected] = useState(initialState.selected);
+  const [solvedGroups, setSolvedGroups] = useState(initialState.solvedGroups);
+  const [mistakes, setMistakes] = useState(initialState.mistakes);
+  const [gameOver, setGameOver] = useState(initialState.gameOver);
+
+  // Save game state
+  const saveGameState = (newWords, newSelected, newSolvedGroups, newMistakes, newGameOver) => {
+    const state = {
+      words: newWords,
+      selected: newSelected,
+      solvedGroups: newSolvedGroups,
+      mistakes: newMistakes,
+      gameOver: newGameOver
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (newGameOver && newSolvedGroups.length === 4) {
+        const completedGames = JSON.parse(localStorage.getItem('completed-games') || '[]');
+        if (!completedGames.includes('connections')) {
+          completedGames.push('connections');
+          localStorage.setItem('completed-games', JSON.stringify(completedGames));
+        }
+      }
+    } catch (error) {
+      console.error('Error saving connections state:', error);
+    }
+  };
 
   const toggleWord = (word) => {
+    let newSelected;
     if (selected.includes(word)) {
-      setSelected(prev => prev.filter(w => w !== word));
+      newSelected = selected.filter(w => w !== word);
     } else if (selected.length < 4) {
-      setSelected(prev => [...prev, word]);
+      newSelected = [...selected, word];
+    } else {
+      return; // Don't change if already 4 selected
     }
+    setSelected(newSelected);
+    saveGameState(words, newSelected, solvedGroups, mistakes, gameOver);
   };
 
   const submitGuess = () => {
@@ -175,32 +301,66 @@ const ConnectionsGame = () => {
     );
 
     if (group) {
-      setSolvedGroups(prev => [...prev, group]);
-      setWords(prev => prev.filter(word => !group.words.includes(word)));
-      setSelected([]);
+      const newSolvedGroups = [...solvedGroups, group];
+      const newWords = words.filter(word => !group.words.includes(word));
+      const newSelected = [];
+      const newGameOver = newSolvedGroups.length === 4;
       
-      if (solvedGroups.length === 3) {
+      setSolvedGroups(newSolvedGroups);
+      setWords(newWords);
+      setSelected(newSelected);
+      
+      if (newGameOver) {
         setGameOver(true);
       }
+      
+      saveGameState(newWords, newSelected, newSolvedGroups, mistakes, newGameOver);
     } else {
-      setMistakes(prev => prev + 1);
-      setSelected([]);
-      if (mistakes >= 3) {
+      const newMistakes = mistakes + 1;
+      const newSelected = [];
+      const newGameOver = newMistakes >= 4;
+      
+      setMistakes(newMistakes);
+      setSelected(newSelected);
+      
+      if (newGameOver) {
         setGameOver(true);
       }
+      
+      saveGameState(words, newSelected, solvedGroups, newMistakes, newGameOver);
     }
   };
 
   const shuffle = () => {
-    setWords(prev => [...prev].sort(() => Math.random() - 0.5));
+    const newWords = [...words].sort(() => Math.random() - 0.5);
+    setWords(newWords);
+    saveGameState(newWords, selected, solvedGroups, mistakes, gameOver);
   };
 
   const reset = () => {
-    setWords(allWords.sort(() => Math.random() - 0.5));
-    setSelected([]);
-    setSolvedGroups([]);
-    setMistakes(0);
-    setGameOver(false);
+    const newWords = allWords.sort(() => Math.random() - 0.5);
+    const initialState = {
+      words: newWords,
+      selected: [],
+      solvedGroups: [],
+      mistakes: 0,
+      gameOver: false
+    };
+    
+    setWords(initialState.words);
+    setSelected(initialState.selected);
+    setSolvedGroups(initialState.solvedGroups);
+    setMistakes(initialState.mistakes);
+    setGameOver(initialState.gameOver);
+    
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      const completedGames = JSON.parse(localStorage.getItem('completed-games') || '[]');
+      const updatedCompleted = completedGames.filter(game => game !== 'connections');
+      localStorage.setItem('completed-games', JSON.stringify(updatedCompleted));
+    } catch (error) {
+      console.error('Error clearing connections state:', error);
+    }
   };
 
   const getColorClass = (color) => {
@@ -293,11 +453,56 @@ const StrandsGame = () => {
   // Define words to find (you can customize these)
   const WORDS_TO_FIND = ['REACT', 'STATE', 'PROPS', 'HOOKS', 'THEME'];
   const SPANGRAM = 'THEME'; // The word that spans the entire theme
+  const STORAGE_KEY = 'strands-game-state';
 
-  const [selectedCells, setSelectedCells] = useState([]);
-  const [foundWords, setFoundWords] = useState([]);
-  const [currentWord, setCurrentWord] = useState('');
-  const [isSelecting, setIsSelecting] = useState(false);
+  // Load saved state
+  const loadGameState = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Error loading strands state:', error);
+    }
+    return {
+      selectedCells: [],
+      foundWords: [],
+      foundWordCells: [], // Track which cells belong to each found word
+      currentWord: '',
+      isSelecting: false
+    };
+  };
+
+  const initialState = loadGameState();
+  const [selectedCells, setSelectedCells] = useState(initialState.selectedCells);
+  const [foundWords, setFoundWords] = useState(initialState.foundWords);
+  const [foundWordCells, setFoundWordCells] = useState(initialState.foundWordCells || []);
+  const [currentWord, setCurrentWord] = useState(initialState.currentWord);
+  const [isSelecting, setIsSelecting] = useState(initialState.isSelecting);
+
+  // Save game state
+  const saveGameState = (newSelectedCells, newFoundWords, newFoundWordCells, newCurrentWord, newIsSelecting) => {
+    const state = {
+      selectedCells: newSelectedCells,
+      foundWords: newFoundWords,
+      foundWordCells: newFoundWordCells,
+      currentWord: newCurrentWord,
+      isSelecting: newIsSelecting
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (newFoundWords.length === WORDS_TO_FIND.length) {
+        const completedGames = JSON.parse(localStorage.getItem('completed-games') || '[]');
+        if (!completedGames.includes('strands')) {
+          completedGames.push('strands');
+          localStorage.setItem('completed-games', JSON.stringify(completedGames));
+        }
+      }
+    } catch (error) {
+      console.error('Error saving strands state:', error);
+    }
+  };
 
   const getCellId = (row, col) => `${row}-${col}`;
   const parseCellId = (cellId) => cellId.split('-').map(Number);
@@ -312,23 +517,37 @@ const StrandsGame = () => {
     const cellId = getCellId(row, col);
     
     if (!isSelecting) {
-      setIsSelecting(true);
-      setSelectedCells([cellId]);
-      setCurrentWord(GRID[row][col]);
+      const newIsSelecting = true;
+      const newSelectedCells = [cellId];
+      const newCurrentWord = GRID[row][col];
+      
+      setIsSelecting(newIsSelecting);
+      setSelectedCells(newSelectedCells);
+      setCurrentWord(newCurrentWord);
+      saveGameState(newSelectedCells, foundWords, foundWordCells, newCurrentWord, newIsSelecting);
     } else {
       if (selectedCells.includes(cellId)) {
         // Clicking on already selected cell - end selection
         checkWord();
       } else if (selectedCells.length === 0 || isAdjacent(selectedCells[selectedCells.length - 1], cellId)) {
-        setSelectedCells(prev => [...prev, cellId]);
-        setCurrentWord(prev => prev + GRID[row][col]);
+        const newSelectedCells = [...selectedCells, cellId];
+        const newCurrentWord = currentWord + GRID[row][col];
+        
+        setSelectedCells(newSelectedCells);
+        setCurrentWord(newCurrentWord);
+        saveGameState(newSelectedCells, foundWords, foundWordCells, newCurrentWord, isSelecting);
       }
     }
   };
 
   const checkWord = () => {
     if (WORDS_TO_FIND.includes(currentWord) && !foundWords.includes(currentWord)) {
-      setFoundWords(prev => [...prev, currentWord]);
+      const newFoundWords = [...foundWords, currentWord];
+      const newFoundWordCells = [...foundWordCells, [...selectedCells]];
+      
+      setFoundWords(newFoundWords);
+      setFoundWordCells(newFoundWordCells);
+      saveGameState([], newFoundWords, newFoundWordCells, '', false);
     }
     resetSelection();
   };
@@ -337,13 +556,32 @@ const StrandsGame = () => {
     setSelectedCells([]);
     setCurrentWord('');
     setIsSelecting(false);
+    saveGameState([], foundWords, foundWordCells, '', false);
   };
 
   const reset = () => {
-    setSelectedCells([]);
-    setFoundWords([]);
-    setCurrentWord('');
-    setIsSelecting(false);
+    const initialState = {
+      selectedCells: [],
+      foundWords: [],
+      foundWordCells: [],
+      currentWord: '',
+      isSelecting: false
+    };
+    
+    setSelectedCells(initialState.selectedCells);
+    setFoundWords(initialState.foundWords);
+    setFoundWordCells(initialState.foundWordCells);
+    setCurrentWord(initialState.currentWord);
+    setIsSelecting(initialState.isSelecting);
+    
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      const completedGames = JSON.parse(localStorage.getItem('completed-games') || '[]');
+      const updatedCompleted = completedGames.filter(game => game !== 'strands');
+      localStorage.setItem('completed-games', JSON.stringify(updatedCompleted));
+    } catch (error) {
+      console.error('Error clearing strands state:', error);
+    }
   };
 
   return (
@@ -366,10 +604,7 @@ const StrandsGame = () => {
           row.map((letter, colIndex) => {
             const cellId = getCellId(rowIndex, colIndex);
             const isSelected = selectedCells.includes(cellId);
-            const isFound = foundWords.some(word => {
-              // Simple check if this cell is part of any found word
-              return true; // You could implement more sophisticated highlighting here
-            });
+            const isPartOfFoundWord = foundWordCells.some(wordCells => wordCells.includes(cellId));
 
             return (
               <button
@@ -379,7 +614,7 @@ const StrandsGame = () => {
                   w-12 h-12 rounded-full text-lg font-bold border-2
                   ${isSelected 
                     ? 'bg-blue-500 text-white border-blue-600' 
-                    : foundWords.some(word => word.includes(letter))
+                    : isPartOfFoundWord
                     ? 'bg-yellow-200 border-yellow-400'
                     : 'bg-gray-100 border-gray-300 hover:bg-gray-200'}
                 `}
@@ -450,10 +685,40 @@ const CrosswordGame = () => {
     }
   };
 
-  const [grid, setGrid] = useState(
-    Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(''))
-  );
-  const [selectedCell, setSelectedCell] = useState(null);
+  const STORAGE_KEY = 'crossword-game-state';
+
+  // Load saved state
+  const loadGameState = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Error loading crossword state:', error);
+    }
+    return {
+      grid: Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('')),
+      selectedCell: null
+    };
+  };
+
+  const initialState = loadGameState();
+  const [grid, setGrid] = useState(initialState.grid);
+  const [selectedCell, setSelectedCell] = useState(initialState.selectedCell);
+
+  // Save game state
+  const saveGameState = (newGrid, newSelectedCell) => {
+    const state = {
+      grid: newGrid,
+      selectedCell: newSelectedCell
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error('Error saving crossword state:', error);
+    }
+  };
 
   const handleCellChange = (row, col, value) => {
     if (SOLUTION[row][col] === '') return; // Don't allow input in black squares
@@ -461,11 +726,22 @@ const CrosswordGame = () => {
     const newGrid = [...grid];
     newGrid[row][col] = value.toUpperCase();
     setGrid(newGrid);
+    saveGameState(newGrid, selectedCell);
   };
 
   const reset = () => {
-    setGrid(Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('')));
+    const newGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(''));
+    setGrid(newGrid);
     setSelectedCell(null);
+    
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      const completedGames = JSON.parse(localStorage.getItem('completed-games') || '[]');
+      const updatedCompleted = completedGames.filter(game => game !== 'crossword');
+      localStorage.setItem('completed-games', JSON.stringify(updatedCompleted));
+    } catch (error) {
+      console.error('Error clearing crossword state:', error);
+    }
   };
 
   const checkSolution = () => {
@@ -477,6 +753,12 @@ const CrosswordGame = () => {
     
     if (isCorrect) {
       alert('Congratulations! Puzzle solved!');
+      // Mark as completed
+      const completedGames = JSON.parse(localStorage.getItem('completed-games') || '[]');
+      if (!completedGames.includes('crossword')) {
+        completedGames.push('crossword');
+        localStorage.setItem('completed-games', JSON.stringify(completedGames));
+      }
     } else {
       alert('Not quite right. Keep trying!');
     }
@@ -507,7 +789,11 @@ const CrosswordGame = () => {
                     maxLength="1"
                     value={grid[rowIndex][colIndex]}
                     onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
-                    onClick={() => setSelectedCell(cellId)}
+                    onClick={() => {
+                      const cellId = `${rowIndex}-${colIndex}`;
+                      setSelectedCell(cellId);
+                      saveGameState(grid, cellId);
+                    }}
                     className={`
                       w-12 h-12 border-2 text-center text-lg font-bold
                       ${selectedCell === cellId ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}
@@ -565,21 +851,44 @@ const App = () => {
     { id: 'crossword', name: 'Crossword', component: CrosswordGame }
   ];
 
+  // Get completed games from localStorage
+  const getCompletedGames = () => {
+    try {
+      return JSON.parse(localStorage.getItem('completed-games') || '[]');
+    } catch (error) {
+      console.error('Error loading completed games:', error);
+      return [];
+    }
+  };
+
+  const completedGames = getCompletedGames();
+
   const renderGame = () => {
     if (currentGame === 'menu') {
       return (
         <div className="max-w-lg mx-auto p-4">
           <h1 className="text-3xl font-bold text-center mb-8">NYT Games</h1>
           <div className="grid grid-cols-2 gap-4">
-            {games.map((game) => (
-              <button
-                key={game.id}
-                onClick={() => setCurrentGame(game.id)}
-                className="p-6 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-lg font-semibold"
-              >
-                {game.name}
-              </button>
-            ))}
+            {games.map((game) => {
+              const isCompleted = completedGames.includes(game.id);
+              return (
+                <button
+                  key={game.id}
+                  onClick={() => setCurrentGame(game.id)}
+                  className={`
+                    p-6 rounded-lg text-lg font-semibold transition-colors
+                    ${isCompleted 
+                      ? 'bg-green-500 hover:bg-green-600 text-white' 
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'}
+                  `}
+                >
+                  {game.name}
+                  {isCompleted && (
+                    <div className="text-sm font-normal mt-1">✓ Completed</div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       );
