@@ -413,10 +413,11 @@ const ConnectionsGame = () => {
             key={index}
             onClick={() => toggleWord(word)}
             className={`
-              p-3 rounded text-sm font-semibold border-2 h-16 text-green-800
+              p-2 rounded font-semibold border-2 min-h-16 flex items-center justify-center
+              ${word.length > 8 ? 'text-xs' : 'text-sm'}
               ${selected.includes(word) 
-                ? 'bg-green-300 border-green-400' 
-                : 'bg-green-50 border-green-200 hover:bg-green-200'}
+                ? 'bg-gray-300 border-gray-400' 
+                : 'bg-gray-100 border-gray-200 hover:bg-gray-200'}
             `}
           >
             {word}
