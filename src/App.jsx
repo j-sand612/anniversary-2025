@@ -221,13 +221,25 @@ const WordleGame = () => {
 const ConnectionsGame = () => {
   // You can customize these groups
   const GROUPS = [
-    { words: ['DOG', 'CAT', 'BIRD', 'FISH'], category: 'PETS', color: 'yellow' },
-    { words: ['RED', 'BLUE', 'GREEN', 'PURPLE'], category: 'COLORS', color: 'green' },
-    { words: ['APPLE', 'GOOGLE', 'MICROSOFT', 'AMAZON'], category: 'TECH COMPANIES', color: 'blue' },
-    { words: ['SPRING', 'SUMMER', 'FALL', 'WINTER'], category: 'SEASONS', color: 'purple' }
+    { words: ['COFFEE', 'BAGELS', 'CROISSANTS', 'PANCAKES'], category: 'HOME BREAKFASTS', color: 'yellow' },
+    { words: ['CARMY', 'MABEL', 'TED', 'HOLT'], category: 'CHARACTERS FROM OUR FAVORITE SHOWS', color: 'green' },
+    { words: ['SCOT', 'ICE', 'DIEGO', 'RHODE'], category: 'PLACES WE HAVE BEEN, KINDA', color: 'blue' },
+    { words: ['SAGE', 'DUSTY', 'LAKE', 'FARM'], category: 'WEDDING/ENGAGEMENT DETAILS MINUS A COLOR', color: 'purple' }
   ];
+  
 
-  const allWords = GROUPS.flatMap(group => group.words).sort(() => Math.random() - 0.5);
+  function shuffleArray(array) {
+    const shuffled = [...array]; // Create a copy to avoid mutating original
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+  // Get all words and shuffle them properly
+  const allWords = shuffleArray(GROUPS.flatMap(group => group.words));
+  // const allWords = GROUPS.flatMap(group => group.words).sort(() => Math.random() - 0.5);
   const STORAGE_KEY = 'connections-game-state';
 
   // Load saved state
@@ -443,16 +455,19 @@ const ConnectionsGame = () => {
 // Strands Game Component
 const StrandsGame = () => {
   const GRID = [
-    ['T', 'H', 'E', 'M', 'E'],
-    ['R', 'E', 'A', 'C', 'T'],
-    ['S', 'T', 'A', 'T', 'E'],
-    ['H', 'O', 'O', 'K', 'S'],
-    ['P', 'R', 'O', 'P', 'S']
+    ['I', 'C', 'C', 'S', 'N','A'],
+    ['L', 'O', 'O', 'R', 'B','E'],
+    ['B', 'L', 'A', 'C', 'K','B'],
+    ['E', 'N', 'C', 'H', 'I','L'],
+    ['L', 'I', 'S', 'A', 'D','A'],
+    ['L', 'T', 'S', 'E', 'E','U'],
+    ['A', 'R', 'E', 'E', 'C','A'],
+    ['S', 'O', 'T', 'C', 'H','S'],
   ];
 
   // Define words to find (you can customize these)
-  const WORDS_TO_FIND = ['REACT', 'STATE', 'PROPS', 'HOOKS', 'THEME'];
-  const SPANGRAM = 'THEME'; // The word that spans the entire theme
+  const WORDS_TO_FIND = ['ENCHILADAS', 'BLACKBEANS', 'CHEESE', 'TORTILLAS', 'SAUCE', 'BROCCOLI'];
+  const SPANGRAM = 'ENCHILADAS'; // The word that spans the entire theme
   const STORAGE_KEY = 'strands-game-state';
 
   // Load saved state
@@ -601,12 +616,12 @@ const StrandsGame = () => {
       </div>
 
       <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
-        <p className="text-sm text-green-700">Find words related to: <strong>React Development</strong></p>
+        <p className="text-sm text-green-700">THEME: <strong>Ready For The Week!</strong></p>
         <p className="text-sm text-green-700">Current word: <strong>{currentWord}</strong></p>
         <p className="text-sm text-green-700">Found: {foundWords.length}/{WORDS_TO_FIND.length}</p>
       </div>
 
-      <div className="grid grid-cols-5 gap-1 mb-6 max-w-xs mx-auto">
+      <div className="grid grid-cols-6 gap-1 mb-6 max-w-xs mx-auto">
         {GRID.map((row, rowIndex) =>
           row.map((letter, colIndex) => {
             const cellId = getCellId(rowIndex, colIndex);
@@ -669,45 +684,77 @@ const StrandsGame = () => {
 
 // Simple Crossword Component
 const CrosswordGame = () => {
-  // Simple 5x5 crossword grid (you can customize this)
-  const GRID_SIZE = 5;
+  const GRID_SIZE = 10;
   const SOLUTION = [
-    ['R', 'E', 'A', 'C', 'T'],
-    ['O', '', 'P', '', 'H'],
-    ['U', '', 'P', '', 'E'],
-    ['T', '', 'S', '', 'M'],
-    ['E', 'R', 'R', 'O', 'R']
+    ['', '', '', '', '', '', 'B', 'A', 'R', 'N'],
+    ['', '', '', '', '', '', 'A', '', '', ''],
+    ['', '', 'B', 'L', 'O', 'C', 'K', '', '', ''],
+    ['', '', '', 'A', '', '', 'E', '', '', ''],
+    ['', '', '', 'T', '', 'J', '', 'D', '', ''],
+    ['', '', '', 'T', '', 'U', '', 'A', '', ''],
+    ['', '', 'M', 'E', 'A', 'L', 'P', 'R', 'E', 'P'],
+    ['', '', '', '', '', 'Y', '', 'I', '', ''],
+    ['', '', '', '', '', '', '', 'O', 'F', 'F'],
+    ['', '', '', '', '', '', '', 'S', '', ''],
   ];
 
   const CLUES = {
     across: {
-      1: "JavaScript library for building UIs",
-      5: "Mistake in code"
+      1: "The type of venue where we got married",
+      2: "Island where we got engaged",
+      6: "How we start the week",
+      7: "See 1 Down"
     },
     down: {
-      1: "Path or direction",
-      2: "React application state",
-      3: "Single idea or subject",
-      4: "CSS styling system"
+      1: "Yearly competition show we watch with yummy food and cozy vibes, familiarly",
+      3: "Great pairing with a croissant or bagel",
+      4: "Month when we got married",
+      5: "Our go to pizza spot nearby"
+    }
+  };
+
+  // Define clue number positions based on your puzzle
+  const CLUE_POSITIONS = {
+    across: {
+      1: { row: 0, col: 6 },  // BARN
+      2: { row: 2, col: 2 },  // BLOCK
+      6: { row: 6, col: 2 },  // MEALPREP
+      7: { row: 8, col: 7 }   // OFF
+    },
+    down: {
+      1: { row: 0, col: 6 },  // BAKE (sharing position with 1 across)
+      3: { row: 2, col: 3 },  // LATTE
+      4: { row: 4, col: 5 },  // JULY (starts at J)
+      5: { row: 4, col: 7 }   // DARIOS (starts at D)
     }
   };
 
   const STORAGE_KEY = 'crossword-game-state';
 
-  // Load saved state
+  // Create empty grid
+  const createEmptyGrid = () => Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(''));
+
+  // Load saved state with validation
   const loadGameState = () => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Validate grid dimensions
+        if (parsed.grid && 
+            parsed.grid.length === GRID_SIZE && 
+            parsed.grid.every(row => row && row.length === GRID_SIZE)) {
+          return parsed;
+        }
       }
     } catch (error) {
       console.error('Error loading crossword state:', error);
     }
+    // Return default state if loading fails or grid is invalid
     return {
-      grid: Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('')),
+      grid: createEmptyGrid(),
       selectedCell: null,
-      timeElapsed: 0, // in seconds
+      timeElapsed: 0,
       isCompleted: false
     };
   };
@@ -718,9 +765,9 @@ const CrosswordGame = () => {
   const [timeElapsed, setTimeElapsed] = useState(initialState.timeElapsed);
   const [isCompleted, setIsCompleted] = useState(initialState.isCompleted);
 
-  // Timer effect - only runs when component is mounted (i.e., when in crossword game)
+  // Timer effect
   useEffect(() => {
-    if (isCompleted) return; // Don't run timer if already completed
+    if (isCompleted) return;
 
     const timer = setInterval(() => {
       setTimeElapsed(prev => prev + 1);
@@ -782,7 +829,7 @@ const CrosswordGame = () => {
   };
 
   const handleCellChange = (row, col, value) => {
-    if (SOLUTION[row][col] === '' || isCompleted) return; // Don't allow input in black squares or if completed
+    if (SOLUTION[row][col] === '' || isCompleted) return;
     
     const newGrid = [...grid];
     newGrid[row][col] = value.toUpperCase();
@@ -791,7 +838,7 @@ const CrosswordGame = () => {
   };
 
   const reset = () => {
-    const newGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(''));
+    const newGrid = createEmptyGrid();
     setGrid(newGrid);
     setSelectedCell(null);
     setTimeElapsed(0);
@@ -812,6 +859,27 @@ const CrosswordGame = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Get clue number for a cell
+  const getClueNumber = (row, col) => {
+    const numbers = [];
+    
+    // Check across clues
+    Object.entries(CLUE_POSITIONS.across).forEach(([num, pos]) => {
+      if (pos.row === row && pos.col === col) {
+        numbers.push(num);
+      }
+    });
+    
+    // Check down clues
+    Object.entries(CLUE_POSITIONS.down).forEach(([num, pos]) => {
+      if (pos.row === row && pos.col === col && !numbers.includes(num)) {
+        numbers.push(num);
+      }
+    });
+    
+    return numbers.length > 0 ? numbers[0] : null;
   };
 
   return (
@@ -836,41 +904,42 @@ const CrosswordGame = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-5 gap-1 mb-6 max-w-xs mx-auto">
-        {Array(GRID_SIZE).fill().map((_, rowIndex) =>
-          Array(GRID_SIZE).fill().map((_, colIndex) => {
+      <div className="grid grid-cols-10 gap-0.5 mb-6 mx-auto" style={{width: 'fit-content'}}>
+        {grid.map((row, rowIndex) =>
+          row.map((cell, colIndex) => {
             const isBlack = SOLUTION[rowIndex][colIndex] === '';
             const cellId = `${rowIndex}-${colIndex}`;
+            const clueNumber = getClueNumber(rowIndex, colIndex);
             
             return (
-              <div key={cellId} className="relative">
+              <div key={cellId} className="relative w-8 h-8">
                 {isBlack ? (
-                  <div className="w-12 h-12 bg-green-800"></div>
+                  <div className="w-full h-full bg-gray-800"></div>
                 ) : (
-                  <input
-                    type="text"
-                    maxLength="1"
-                    value={grid[rowIndex][colIndex]}
-                    onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
-                    onClick={() => {
-                      const cellId = `${rowIndex}-${colIndex}`;
-                      setSelectedCell(cellId);
-                      saveGameState(grid, cellId, timeElapsed, isCompleted);
-                    }}
-                    className={`
-                      w-12 h-12 border-2 text-center text-lg font-bold text-green-800
-                      ${selectedCell === cellId ? 'border-blue-500 bg-blue-50' : 'border-green-300'}
-                      ${isCompleted ? 'bg-green-100' : 'bg-green-50'}
-                    `}
-                    disabled={isCompleted}
-                  />
-                )}
-                {/* Add number labels for clues */}
-                {((rowIndex === 0 && colIndex === 0) || 
-                  (rowIndex === 4 && colIndex === 1)) && (
-                  <span className="absolute top-0 left-0 text-xs bg-green-100 px-1 text-green-800">
-                    {rowIndex === 0 && colIndex === 0 ? '1' : '5'}
-                  </span>
+                  <>
+                    <input
+                      type="text"
+                      maxLength="1"
+                      value={cell}
+                      onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
+                      onClick={() => {
+                        setSelectedCell(cellId);
+                        saveGameState(grid, cellId, timeElapsed, isCompleted);
+                      }}
+                      className={`
+                        w-full h-full border-2 text-center text-sm font-bold text-green-800
+                        ${selectedCell === cellId ? 'border-blue-500 bg-blue-50' : 'border-green-300'}
+                        ${isCompleted ? 'bg-green-100' : 'bg-white'}
+                        focus:outline-none focus:border-blue-500
+                      `}
+                      disabled={isCompleted}
+                    />
+                    {clueNumber && (
+                      <span className="absolute top-0 left-0 text-xs font-semibold px-0.5 text-gray-700 pointer-events-none">
+                        {clueNumber}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             );
@@ -882,13 +951,17 @@ const CrosswordGame = () => {
         <div>
           <h3 className="font-semibold mb-2 text-green-800">Across</h3>
           {Object.entries(CLUES.across).map(([num, clue]) => (
-            <p key={num} className="text-sm text-green-700">{num}. {clue}</p>
+            <p key={num} className="text-sm text-green-700 mb-1">
+              <span className="font-semibold">{num}.</span> {clue}
+            </p>
           ))}
         </div>
         <div>
           <h3 className="font-semibold mb-2 text-green-800">Down</h3>
           {Object.entries(CLUES.down).map(([num, clue]) => (
-            <p key={num} className="text-sm text-green-700">{num}. {clue}</p>
+            <p key={num} className="text-sm text-green-700 mb-1">
+              <span className="font-semibold">{num}.</span> {clue}
+            </p>
           ))}
         </div>
       </div>
@@ -949,14 +1022,14 @@ const App = () => {
       
       return (
         <div className="max-w-lg mx-auto p-4">
-          <h1 className="text-3xl font-bold text-center mb-8 text-green-800">NYT Games</h1>
+          <h1 className="text-3xl font-bold text-center mb-8 text-green-800">Happy Anniversary!</h1>
           
           {allGamesCompleted && (
             <div className="mb-8 p-6 bg-gradient-to-r from-yellow-200 to-green-200 rounded-lg border-2 border-yellow-400 text-center">
               <div className="text-4xl mb-2">🎉🏆🎉</div>
-              <h2 className="text-2xl font-bold text-green-800 mb-2">Puzzle Master!</h2>
-              <p className="text-green-700">Congratulations! You've completed all the puzzles!</p>
-              <p className="text-green-600 text-sm mt-1">You're a true word game champion! 🌟</p>
+              <h2 className="text-2xl font-bold text-green-800 mb-2">You did it!!</h2>
+              <p className="text-green-700">I love you muchísimo!</p>
+              <p className="text-green-600 text-sm mt-1">- Chuy</p>
             </div>
           )}
           
